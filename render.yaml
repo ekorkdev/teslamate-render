@@ -1,28 +1,25 @@
-# Bu, Render Blueprint'in GÜNCELLENMİŞ versiyonudur.
-# Veritabanı MANUEL olarak oluşturulduktan sonra kullanılır.
+# Bu, Render Blueprint'in DOĞRU ve GÜNCEL versiyonudur.
 
 services:
-  # 1. Mosquitto (MQTT) Servisi
+  # 1. Mosquitto (MQTT) Servisi (Bu doğruydu, aynı kalıyor)
   - type: pserv
     name: mosquitto
-    image:
-      url: eclipse-mosquitto:2
     plan: free
+    dockerImage: eclipse-mosquitto:2
 
-  # 2. Teslamate Ana Uygulaması
+  # 2. Teslamate Ana Uygulaması (HATALAR DÜZELTİLDİ)
   - type: web
     name: teslamate
     plan: free
-    image:
-      url: teslamate/teslamate:latest
-    port: 4000
+    # DÜZELTME: 'image:' bloğu yerine doğru olan 'dockerImage' kullanılır.
+    dockerImage: teslamate/teslamate:latest
+    # DÜZELTME: 'port:' satırı SİLİNDİ.
+    # Render, imajın içindeki EXPOSE 4000 komutunu otomatik olarak algılar.
     healthCheckPath: /
-    # Ortam Değişkenleri
     envVars:
-      # Veritabanı bağlantı bilgilerini manuel oluşturduğumuz veritabanından al.
       - key: DATABASE_USER
         fromDatabase:
-          name: teslamate-db # Manuel olarak oluşturduğunuz veritabanının adı
+          name: teslamate-db
           property: user
       - key: DATABASE_PASS
         fromDatabase:
@@ -36,29 +33,28 @@ services:
         fromDatabase:
           name: teslamate-db
           property: host
-      # MQTT sunucusunun adresini 'mosquitto' servisinin adresi olarak ayarla.
       - key: MQTT_HOST
         value: mosquitto
 
-  # 3. Grafana (Görselleştirme Paneli)
+  # 3. Grafana (Görselleştirme Paneli) (HATALAR DÜZELTİLDİ)
   - type: web
     name: grafana
     plan: free
-    image:
-      url: teslamate/grafana:latest
-    port: 3000
+    # DÜZELTME: 'image:' bloğu yerine doğru olan 'dockerImage' kullanılır.
+    dockerImage: teslamate/grafana:latest
+    # DÜZELTME: 'port:' satırı SİLİNDİ.
+    # Render, imajın içindeki EXPOSE 3000 komutunu otomatik olarak algılar.
     healthCheckPath: /
     disk:
       name: grafana-data
       mountPath: /var/lib/grafana
       sizeGB: 1
-    # Ortam Değişkenleri
     envVars:
       - key: GF_DATABASE_TYPE
         value: postgres
       - key: GF_DATABASE_HOST
         fromDatabase:
-          name: teslamate-db # Manuel olarak oluşturduğunuz veritabanının adı
+          name: teslamate-db
           property: host
       - key: GF_DATABASE_USER
         fromDatabase:
@@ -69,4 +65,4 @@ services:
           name: teslamate-db
           property: password
       - key: GF_DATABASE_NAME
-        value: grafana # Grafana kendi tabloları için bu ismi kullanır.
+        value: grafana
