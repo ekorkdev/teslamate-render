@@ -1,20 +1,19 @@
-# Bu, Render Blueprint'in DOĞRU ve GÜNCEL versiyonudur.
+# Bu, Render Blueprint'in SON ve DOĞRU versiyonudur.
 
 services:
-  # 1. Mosquitto (MQTT) Servisi (Bu doğruydu, aynı kalıyor)
+  # 1. Mosquitto (MQTT) Servisi
   - type: pserv
     name: mosquitto
     plan: free
-    dockerImage: eclipse-mosquitto:2
+    image:
+      url: eclipse-mosquitto:2
 
-  # 2. Teslamate Ana Uygulaması (HATALAR DÜZELTİLDİ)
+  # 2. Teslamate Ana Uygulaması
   - type: web
     name: teslamate
     plan: free
-    # DÜZELTME: 'image:' bloğu yerine doğru olan 'dockerImage' kullanılır.
-    dockerImage: teslamate/teslamate:latest
-    # DÜZELTME: 'port:' satırı SİLİNDİ.
-    # Render, imajın içindeki EXPOSE 4000 komutunu otomatik olarak algılar.
+    image:
+      url: teslamate/teslamate:latest
     healthCheckPath: /
     envVars:
       - key: DATABASE_USER
@@ -36,14 +35,12 @@ services:
       - key: MQTT_HOST
         value: mosquitto
 
-  # 3. Grafana (Görselleştirme Paneli) (HATALAR DÜZELTİLDİ)
+  # 3. Grafana (Görselleştirme Paneli)
   - type: web
     name: grafana
     plan: free
-    # DÜZELTME: 'image:' bloğu yerine doğru olan 'dockerImage' kullanılır.
-    dockerImage: teslamate/grafana:latest
-    # DÜZELTME: 'port:' satırı SİLİNDİ.
-    # Render, imajın içindeki EXPOSE 3000 komutunu otomatik olarak algılar.
+    image:
+      url: teslamate/grafana:latest
     healthCheckPath: /
     disk:
       name: grafana-data
