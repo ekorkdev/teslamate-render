@@ -1,97 +1,71 @@
-# Bu bir Render Blueprint (yapı planı) dosyasıdır.
-# Teslamate ve bağımlılıklarını kurar.
+# Bu, Render Blueprint'in GÜNCELLENMİŞ versiyonudur.
+# Veritabanı MANUEL olarak oluşturulduktan sonra kullanılır.
 
 services:
-  # 1. PostgreSQL Veritabanı Servisi
-  # Render'ın kendi yönettiği ücretsiz bir veritabanı oluşturuyoruz.
-  - type: psql
-    name: teslamate-db
-    plan: free # Ücretsiz katmanı kullandığımızı belirtiyoruz.
-    # Veritabanı sürümünü Teslamate'in sevdiği bir sürüm yapalım.
-    psqlVersion: 15
-
-  # 2. Mosquitto (MQTT) Servisi
-  # Bu, Teslamate'in Tesla API ile konuşması için gereken bir yardımcıdır.
-  # Dışarıdan erişime gerek olmadığı için 'private service' (pserv) kullanıyoruz.
+  # 1. Mosquitto (MQTT) Servisi
   - type: pserv
     name: mosquitto
     image:
-      url: eclipse-mosquitto:2 # Resmi Docker imajını kullan
+      url: eclipse-mosquitto:2
     plan: free
 
-  # 3. Teslamate Ana Uygulaması
-  # Bu servisi dışarıdan erişilebilir yapacağız ('web' tipi).
+  # 2. Teslamate Ana Uygulaması
   - type: web
     name: teslamate
     plan: free
-    # Resmi Teslamate Docker imajını kullan
     image:
       url: teslamate/teslamate:latest
-    # Render'a bu servisin 4000 portunda çalıştığını söylüyoruz.
-    # URL'niz bu porta yönlendirilecek.
     port: 4000
     healthCheckPath: /
-    # Ortam Değişkenleri: Servislerin birbiriyle konuşmasını sağlar.
+    # Ortam Değişkenleri
     envVars:
-      # Veritabanı bağlantı bilgilerini 'teslamate-db' servisinden sihirli bir şekilde al.
+      # Veritabanı bağlantı bilgilerini manuel oluşturduğumuz veritabanından al.
       - key: DATABASE_USER
-        fromService:
-          type: psql
-          name: teslamate-db
+        fromDatabase:
+          name: teslamate-db # Manuel olarak oluşturduğunuz veritabanının adı
           property: user
       - key: DATABASE_PASS
-        fromService:
-          type: psql
+        fromDatabase:
           name: teslamate-db
           property: password
       - key: DATABASE_NAME
-        fromService:
-          type: psql
+        fromDatabase:
           name: teslamate-db
           property: database
       - key: DATABASE_HOST
-        fromService:
-          type: psql
+        fromDatabase:
           name: teslamate-db
           property: host
       # MQTT sunucusunun adresini 'mosquitto' servisinin adresi olarak ayarla.
       - key: MQTT_HOST
         value: mosquitto
 
-  # 4. Grafana (Görselleştirme Paneli)
-  # Bu servisi de dışarıdan erişilebilir yapacağız.
+  # 3. Grafana (Görselleştirme Paneli)
   - type: web
     name: grafana
     plan: free
-    # Resmi Grafana Docker imajını kullan
     image:
       url: teslamate/grafana:latest
-    # Render'a bu servisin 3000 portunda çalıştığını söylüyoruz.
     port: 3000
     healthCheckPath: /
-    # Grafana'nın ayarlarını ve dashboard'larını kaybetmemesi için kalıcı bir disk ekliyoruz.
     disk:
       name: grafana-data
       mountPath: /var/lib/grafana
-      sizeGB: 1 # 1 GB yeterli olacaktır.
-    # Ortam Değişkenleri:
+      sizeGB: 1
+    # Ortam Değişkenleri
     envVars:
-      # Grafana'nın da Teslamate veritabanına bağlanmasını sağlıyoruz.
       - key: GF_DATABASE_TYPE
         value: postgres
       - key: GF_DATABASE_HOST
-        fromService:
-          type: psql
-          name: teslamate-db
+        fromDatabase:
+          name: teslamate-db # Manuel olarak oluşturduğunuz veritabanının adı
           property: host
       - key: GF_DATABASE_USER
-        fromService:
-          type: psql
+        fromDatabase:
           name: teslamate-db
           property: user
       - key: GF_DATABASE_PASSWORD
-        fromService:
-          type: psql
+        fromDatabase:
           name: teslamate-db
           property: password
       - key: GF_DATABASE_NAME
